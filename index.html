@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Task Tracker</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --text: #f5f6fa;
+            --bg: #1e272e;
+            --card-bg: rgba(30, 39, 46, 0.7);
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #e17055;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --blur: blur(10px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg), #2d3436);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e272e, #2d3436);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            transition: all 0.5s ease;
+        }
+
+        .login-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+            position: relative;
+            z-index: 1001;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .face-auth-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .face-auth-container.active {
+            display: block;
+        }
+
+        .video-container {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .capture-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(253, 121, 168, 0.4);
+        }
+
+        .capture-btn i {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .task-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .task-count {
+            background: rgba(0, 184, 148, 0.2);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .task-count span {
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        /* Main Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Task List */
+        .task-list-container {
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .task-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            border-left-color: var(--success);
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+        }
+
+        .task-item.high-priority {
+            border-left-color: var(--danger);
+        }
+
+        .task-item.medium-priority {
+            border-left-color: var(--warning);
+        }
+
+        .task-item.low-priority {
+            border-left-color: var(--success);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            flex-grow: 1;
+        }
+
+        .task-priority {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+
+        .high-priority .task-priority {
+            background: rgba(225, 112, 85, 0.2);
+            color: var(--danger);
+        }
+
+        .medium-priority .task-priority {
+            background: rgba(253, 203, 110, 0.2);
+            color: var(--warning);
+        }
+
+        .low-priority .task-priority {
+            background: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+        }
+
+        .task-due-date {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .task-due-date i {
+            font-size: 0.8rem;
+        }
+
+        .task-description {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+        }
+
+        .complete-btn:hover {
+            color: var(--success);
+        }
+
+        .edit-btn:hover {
+            color: var(--warning);
+        }
+
+        .delete-btn:hover {
+            color: var(--danger);
+        }
+
+        /* Add Task Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Dashboard */
+        .dashboard-container {
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        .chart-container {
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .report-btn {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Icons */
+        .icon {
+            font-style: normal;
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-size: 1.2rem;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-box {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .task-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .time-filter {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* Calendar Styles */
+#calendar {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    padding: 5px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+    background: var(--primary);
+    transform: scale(1.05);
+}
+
+.calendar-day.empty {
+    background: transparent;
+    cursor: default;
+}
+
+.calendar-day.has-meeting {
+    border: 1px solid var(--accent);
+}
+
+.meeting-dot {
+    position: absolute;
+    bottom: 3px;
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h1 class="login-title">Nexus Task Tracker</h1>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div style="position: relative;">
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <button id="togglePassword" type="button" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text); cursor: pointer;">
+                        <i class="icon">visibility</i>
+                    </button>
+                </div>
+            </div>
+            <button class="btn" id="loginBtn">Login</button>
+            <div style="margin-top: 15px;">
+                <a href="#" id="forgotPassword" style="color: var(--secondary); text-decoration: none;">Forgot password?</a>
+            </div>
+            <p style="margin-top: 15px; color: rgba(255,255,255,0.5);">or</p>
+            <button class="btn btn-secondary" id="faceAuthBtn">Login with Face ID</button>
+            
+            <div class="face-auth-container" id="faceAuthContainer">
+                <div class="video-container">
+                    <video id="video" autoplay playsinline></video>
+                    <button class="capture-btn" id="captureBtn"><i class="icon">camera_alt</i></button>
+                </div>
+                <p id="faceAuthMessage" style="margin-bottom: 15px; color: rgba(255,255,255,0.7);">Please position your face in the frame</p>
+                <button class="btn btn-secondary" id="cancelFaceAuth">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="container" id="appContainer" style="display: none;">
+        <header>
+            <div class="logo">Nexus Task Tracker</div>
+            <div class="task-stats">
+                <div class="task-count"><span id="completedCount">0</span> of <span id="totalCount">0</span> tasks completed</div>
+                <button class="btn" id="addTaskBtn"><i class="icon">add</i> Add Task</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="task-list-container">
+                <div class="task-list-header">
+                    <h2 class="section-title">Your Tasks</h2>
+                    <div class="time-filter">
+                        <button class="filter-btn active" data-filter="today">Today</button>
+                        <button class="filter-btn" data-filter="week">This Week</button>
+                        <button class="filter-btn" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="custom">Custom</button>
+                    </div>
+                </div>
+                <ul class="task-list" id="taskList">
+                    <!-- Tasks will be added here dynamically -->
+                </ul>
+            </div>
+
+            <div class="dashboard-container">
+                <div class="chart-container">
+                    <h3 class="chart-title">Task Completion</h3>
+                    <canvas id="completionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Priority Distribution</h3>
+                    <canvas id="priorityChart"></canvas>
+                </div>
+                <button class="btn report-btn" id="generateReportBtn"><i class="icon">download</i> Generate Report</button>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">Calendar</h3>
+                <div id="calendar"></div>
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">Quick Notes</h3>
+                <textarea id="quickNotes" placeholder="Type your notes here..." 
+                          style="width:100%; height:100px; background:rgba(255,255,255,0.1); 
+                                 border:none; border-radius:8px; padding:10px; color:var(--text);"></textarea>
+                <button class="btn" id="saveNotes" style="margin-top:10px; width:100%;">
+                    <i class="icon">save</i> Save Notes
+                </button>
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">Create Alert</h3>
+                <input type="text" id="alertMessage" placeholder="Alert message" 
+                       style="width:100%; margin-bottom:10px; padding:8px; background:rgba(255,255,255,0.1); 
+                              border:none; border-radius:8px; color:var(--text);">
+                <input type="datetime-local" id="alertTime" 
+                       style="width:100%; margin-bottom:10px; padding:8px; background:rgba(255,255,255,0.1); 
+                              border:none; border-radius:8px; color:var(--text);">
+                <button class="btn" id="createAlert" style="width:100%;">
+                    <i class="icon">notifications</i> Set Alert
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add New Task</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                <div class="form-group">
+                    <label for="taskTitle">Title</label>
+                    <input type="text" id="taskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskDescription">Description</label>
+                    <textarea id="taskDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="taskDueDate">Due Date</label>
+                    <input type="date" id="taskDueDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskPriority">Priority</label>
+                    <select id="taskPriority" required>
+                        <option value="high">High</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelTaskBtn">Cancel</button>
+                    <button type="submit" class="btn" id="saveTaskBtn">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Date Range Modal -->
+    <div class="modal" id="dateRangeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Select Date Range</h3>
+                <button class="close-btn" id="closeDateRangeModalBtn">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" required>
+            </div>
+            <div class="form-group">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" required>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelDateRangeBtn">Cancel</button>
+                <button type="button" class="btn" id="applyDateRangeBtn">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // App State
+        const state = {
+
+                   // Add this
+            tasks: [],
+            currentFilter: 'today',
+            currentUser: null,
+            editingTaskId: null,
+            dateRange: {
+                start: null,
+                end: null
+            },
+            meetings: {},
+            notes: '',
+            alerts: [],
+        events: []  // Add this for calendar events
+
+        };
+
+        // DOM Elements
+        const loginContainer = document.getElementById('loginContainer');
+        const appContainer = document.getElementById('appContainer');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const faceAuthBtn = document.getElementById('faceAuthBtn');
+        const faceAuthContainer = document.getElementById('faceAuthContainer');
+        const video = document.getElementById('video');
+        const captureBtn = document.getElementById('captureBtn');
+        const faceAuthMessage = document.getElementById('faceAuthMessage');
+        const cancelFaceAuth = document.getElementById('cancelFaceAuth');
+        const taskList = document.getElementById('taskList');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const completedCount = document.getElementById('completedCount');
+        const totalCount = document.getElementById('totalCount');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const taskModal = document.getElementById('taskModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const taskForm = document.getElementById('taskForm');
+        const taskIdInput = document.getElementById('taskId');
+        const taskTitleInput = document.getElementById('taskTitle');
+        const taskDescriptionInput = document.getElementById('taskDescription');
+        const taskDueDateInput = document.getElementById('taskDueDate');
+        const taskPriorityInput = document.getElementById('taskPriority');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelTaskBtn = document.getElementById('cancelTaskBtn');
+        const saveTaskBtn = document.getElementById('saveTaskBtn');
+        const dateRangeModal = document.getElementById('dateRangeModal');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const closeDateRangeModalBtn = document.getElementById('closeDateRangeModalBtn');
+        const cancelDateRangeBtn = document.getElementById('cancelDateRangeBtn');
+        const applyDateRangeBtn = document.getElementById('applyDateRangeBtn');
+        const generateReportBtn = document.getElementById('generateReportBtn');
+        const completionChartCtx = document.getElementById('completionChart').getContext('2d');
+        const priorityChartCtx = document.getElementById('priorityChart').getContext('2d');
+
+        // Charts
+        let completionChart, priorityChart;
+
+        // Initialize the app
+        function init() {
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('taskTrackerUser');
+            if (savedUser) {
+                state.currentUser = JSON.parse(savedUser);
+                if (state.currentUser.faceData) {
+                    faceAuthBtn.style.display = 'block';
+                }
+            }
+
+            // Set up event listeners
+            setupEventListeners();
+            
+
+            // Initialize date inputs with today's date
+            const today = new Date().toISOString().split('T')[0];
+            taskDueDateInput.value = today;
+            taskDueDateInput.min = today;
+            startDateInput.value = today;
+            endDateInput.value = today;
+            startDateInput.min = '2000-01-01';
+            endDateInput.min = '2000-01-01';
+
+            initCalendar();
+            loadNotes();
+             if (window.Notification) {
+             Notification.requestPermission();
+                     }
+        }
+
+                /* ===== CALENDAR & NOTES FUNCTIONS ===== */
+                function initCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            const today = new Date();
+            
+            calendarEl.innerHTML = `
+                <div class="calendar-header">
+                    <button id="prevMonth"><i class="icon">chevron_left</i></button>
+                    <h4>${today.toLocaleString('default', { month: 'long', year: 'numeric' })}</h4>
+                    <button id="nextMonth"><i class="icon">chevron_right</i></button>
+                </div>
+                <div class="calendar-grid" id="calendarDays"></div>
+            `;
+            
+            renderCalendarDays(today);
+            
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                today.setMonth(today.getMonth() - 1);
+                renderCalendarDays(today);
+            });
+            
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                today.setMonth(today.getMonth() + 1);
+                renderCalendarDays(today);
+            });
+        }
+
+        function renderCalendarDays(date) {
+            const daysEl = document.getElementById('calendarDays');
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            let html = '';
+            ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(day => {
+                html += `<div class="calendar-day-header">${day}</div>`;
+            });
+            
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="calendar-day empty"></div>`;
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const hasMeeting = state.meetings[dateStr];
+                html += `
+                    <div class="calendar-day ${hasMeeting ? 'has-meeting' : ''}" data-date="${dateStr}">
+                        ${day}
+                        ${hasMeeting ? '<div class="meeting-dot"></div>' : ''}
+                    </div>
+                `;
+            }
+            
+            daysEl.innerHTML = html;
+            
+            document.querySelectorAll('.calendar-day:not(.empty)').forEach(day => {
+                day.addEventListener('click', () => {
+                    const date = day.dataset.date;
+                    openMeetingModal(date);
+                });
+            });
+        }
+
+        function openMeetingModal(date) {
+            alert(`Create meeting on ${date}\n\nThis would open a meeting creation form in the full version`);
+        }
+
+        function saveNotes() {
+            const notes = document.getElementById('quickNotes').value;
+            localStorage.setItem('taskTrackerNotes', notes);
+            showMessage('Notes saved!', 'success');
+        }
+
+        function loadNotes() {
+            const savedNotes = localStorage.getItem('taskTrackerNotes');
+            if (savedNotes) {
+                document.getElementById('quickNotes').value = savedNotes;
+            }
+        }
+
+        function createAlert() {
+            const message = document.getElementById('alertMessage').value.trim();
+            const time = document.getElementById('alertTime').value;
+            
+            if (!message || !time) {
+                showMessage('Please complete all fields', 'error');
+                return;
+            }
+            
+            const alertTime = new Date(time);
+            if (alertTime <= new Date()) {
+                showMessage('Please select a future time', 'error');
+                return;
+            }
+            
+            const timeout = alertTime - new Date();
+            setTimeout(() => {
+                if (Notification.permission === 'granted') {
+                    new Notification('Task Tracker Alert', { body: message });
+                }
+                showMessage(`ALERT: ${message}`, 'warning');
+            }, timeout);
+            
+            showMessage(`Alert set for ${alertTime.toLocaleString()}`, 'success');
+            document.getElementById('alertMessage').value = '';
+            document.getElementById('alertTime').value = '';
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Login
+            loginBtn.addEventListener('click', handlePasswordLogin);
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handlePasswordLogin();
+            });
+
+            // Password visibility toggle
+            document.getElementById('togglePassword').addEventListener('click', function() {
+                const passwordInput = document.getElementById('password');
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="icon">visibility</i>' : '<i class="icon">visibility_off</i>';
+            });
+
+            // Forgot password
+            document.getElementById('forgotPassword').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('Reset password? This will remove your Face ID data.')) {
+                    localStorage.removeItem('taskTrackerUser');
+                    state.currentUser = null;
+                    showMessage('Password reset. Please create a new account.', 'info');
+                    usernameInput.value = '';
+                    passwordInput.value = '';
+                }
+            });
+
+            // Face authentication
+            faceAuthBtn.addEventListener('click', startFaceAuth);
+            captureBtn.addEventListener('click', captureFace);
+            cancelFaceAuth.addEventListener('click', cancelFaceAuthProcess);
+
+            // Tasks
+            addTaskBtn.addEventListener('click', openAddTaskModal);
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', () => handleFilterChange(btn.dataset.filter));
+            });
+
+            // Task modal
+            closeModalBtn.addEventListener('click', closeTaskModal);
+            cancelTaskBtn.addEventListener('click', closeTaskModal);
+            taskForm.addEventListener('submit', handleTaskSubmit);
+
+            // Date range modal
+            closeDateRangeModalBtn.addEventListener('click', closeDateRangeModal);
+            cancelDateRangeBtn.addEventListener('click', closeDateRangeModal);
+            applyDateRangeBtn.addEventListener('click', applyDateRange);
+
+            // Report generation
+            generateReportBtn.addEventListener('click', generateReport);
+
+            document.getElementById('saveNotes').addEventListener('click', saveNotes);
+            document.getElementById('createAlert').addEventListener('click', createAlert);
+        }
+
+        // Handle password login
+        function handlePasswordLogin() {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!username || !password) {
+                showMessage('Please enter both username and password', 'error');
+                return;
+            }
+
+            if (!state.currentUser) {
+                // First-time login - create user
+                state.currentUser = {
+                    username: username,
+                    password: password,
+                    faceData: null
+                };
+                localStorage.setItem('taskTrackerUser', JSON.stringify(state.currentUser));
+                showMessage('Account created successfully!', 'success');
+                loginSuccess();
+            } else {
+                // Existing user - check credentials
+                if (username === state.currentUser.username && password === state.currentUser.password) {
+                    loginSuccess();
+                } else {
+                    showMessage('Incorrect username or password', 'error');
+                }
+            }
+        }
+
+        // Start face authentication
+        function startFaceAuth() {
+            if (!state.currentUser?.faceData) {
+                // First-time face setup
+                faceAuthMessage.textContent = 'Let\'s set up Face ID for future logins';
+                faceAuthContainer.classList.add('active');
+                
+                // Access camera
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            video.srcObject = stream;
+                        })
+                        .catch(err => {
+                            console.error('Error accessing camera:', err);
+                            showMessage('Could not access camera. Please check permissions.', 'error');
+                            cancelFaceAuthProcess();
+                        });
+                } else {
+                    showMessage('Camera access not supported in your browser', 'error');
+                    cancelFaceAuthProcess();
+                }
+            } else {
+                // Existing user - verify face
+                verifyFace();
+            }
+        }
+
+        // Capture face for first-time setup
+        function captureFace() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // In a real app, we would use a proper face recognition library
+            const faceData = {
+                image: canvas.toDataURL('image/png'),
+                timestamp: new Date().toISOString(),
+                mockMetrics: {
+                    faceWidth: Math.random() * 100 + 100,
+                    eyeDistance: Math.random() * 50 + 50,
+                }
+            };
+
+            state.currentUser.faceData = faceData;
+            localStorage.setItem('taskTrackerUser', JSON.stringify(state.currentUser));
+            
+            showMessage('Face ID setup complete!', 'success');
+            setTimeout(() => {
+                stopCamera();
+                loginSuccess();
+            }, 1000);
+        }
+
+        // Verify face for login
+        function verifyFace() {
+            faceAuthMessage.textContent = 'Please position your face in the frame to verify';
+            faceAuthContainer.classList.add('active');
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        video.srcObject = stream;
+                        captureBtn.innerHTML = '<i class="icon">verified_user</i>';
+                        captureBtn.removeEventListener('click', captureFace);
+                        captureBtn.addEventListener('click', () => {
+                            if (state.currentUser?.faceData) {
+                                const isVerified = Math.random() < 0.8;
+                                if (isVerified) {
+                                    showMessage('Face verification successful!', 'success');
+                                    setTimeout(() => {
+                                        stopCamera();
+                                        loginSuccess();
+                                    }, 1000);
+                                } else {
+                                    showMessage('Face verification failed. Try again or use password.', 'error');
+                                }
+                            } else {
+                                showMessage('No face data found. Please use password.', 'error');
+                                cancelFaceAuthProcess();
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error accessing camera:', err);
+                        showMessage('Could not access camera. Please check permissions.', 'error');
+                        cancelFaceAuthProcess();
+                    });
+            } else {
+                showMessage('Camera access not supported in your browser', 'error');
+                cancelFaceAuthProcess();
+            }
+        }
+
+        // Cancel face auth process
+        function cancelFaceAuthProcess() {
+            stopCamera();
+            faceAuthContainer.classList.remove('active');
+        }
+
+        // Stop camera stream
+        function stopCamera() {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        // Handle successful login
+        function loginSuccess() {
+            loginContainer.classList.add('hidden');
+            appContainer.style.display = 'block';
+            loadTasks();
+            initCharts();
+            if (state.tasks.length === 0) {
+                preloadDemoTasks();
+            }
+        }
+
+        // Load tasks from localStorage
+        function loadTasks() {
+            const savedTasks = localStorage.getItem('taskTrackerTasks');
+            if (savedTasks) {
+                state.tasks = JSON.parse(savedTasks);
+            }
+            renderTasks();
+            updateTaskCount();
+            updateCharts();
+        }
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem('taskTrackerTasks', JSON.stringify(state.tasks));
+            renderTasks();
+            updateTaskCount();
+            updateCharts();
+        }
+
+        // Preload demo tasks for first-time users
+        function preloadDemoTasks() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            
+            state.tasks = [
+                {
+                    id: generateId(),
+                    title: 'Complete project proposal',
+                    description: 'Finish writing the project proposal document and send to team for review',
+                    dueDate: today.toISOString().split('T')[0],
+                    priority: 'high',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: generateId(),
+                    title: 'Team meeting',
+                    description: 'Weekly team sync to discuss progress and blockers',
+                    dueDate: today.toISOString().split('T')[0],
+                    priority: 'medium',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: generateId(),
+                    title: 'Gym session',
+                    description: '1 hour workout at the gym',
+                    dueDate: today.toISOString().split('T')[0],
+                    priority: 'low',
+                    completed: true,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: generateId(),
+                    title: 'Prepare presentation',
+                    description: 'Create slides for the client presentation next week',
+                    dueDate: tomorrow.toISOString().split('T')[0],
+                    priority: 'high',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: generateId(),
+                    title: 'Review analytics',
+                    description: 'Analyze last month\'s performance metrics',
+                    dueDate: nextWeek.toISOString().split('T')[0],
+                    priority: 'medium',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            saveTasks();
+        }
+
+        // Render tasks based on current filter
+        function renderTasks() {
+            taskList.innerHTML = '';
+            
+            if (state.tasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="icon">assignment</i>
+                        <p>No tasks found</p>
+                        <button class="btn" id="addFirstTaskBtn"><i class="icon">add</i> Add Your First Task</button>
+                    </div>
+                `;
+                document.getElementById('addFirstTaskBtn')?.addEventListener('click', openAddTaskModal);
+                return;
+            }
+            
+            let filteredTasks = filterTasks();
+            
+            // Sort tasks by priority (high to low) and due date (ascending)
+            filteredTasks.sort((a, b) => {
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                if (priorityOrder[b.priority] !== priorityOrder[a.priority]) {
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                }
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('li');
+                taskItem.className = `task-item ${task.priority}-priority ${task.completed ? 'completed' : ''}`;
+                taskItem.innerHTML = `
+                    <div class="task-header">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-priority">${task.priority}</div>
+                    </div>
+                    <div class="task-due-date">
+                        <i class="icon">event</i>
+                        Due: ${formatDate(task.dueDate)}
+                    </div>
+                    ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                    <div class="task-actions">
+                        <button class="action-btn complete-btn" data-id="${task.id}">
+                            <i class="icon">${task.completed ? 'check_circle' : 'radio_button_unchecked'}</i>
+                        </button>
+                        <button class="action-btn edit-btn" data-id="${task.id}">
+                            <i class="icon">edit</i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${task.id}">
+                            <i class="icon">delete</i>
+                        </button>
+                    </div>
+                `;
+                taskList.appendChild(taskItem);
+            });
+
+            // Add event listeners to action buttons
+            document.querySelectorAll('.complete-btn').forEach(btn => {
+                btn.addEventListener('click', () => toggleTaskComplete(btn.dataset.id));
+            });
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editTask(btn.dataset.id));
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteTask(btn.dataset.id));
+            });
+        }
+
+        // Filter tasks based on current filter
+        function filterTasks() {
+            let filteredTasks = [...state.tasks];
+            const today = new Date().toISOString().split('T')[0];
+            const todayDate = new Date(today);
+            const endOfWeek = new Date(todayDate);
+            endOfWeek.setDate(todayDate.getDate() + (6 - todayDate.getDay())); // End of current week (Saturday)
+            
+            switch (state.currentFilter) {
+                case 'today':
+                    return filteredTasks.filter(task => task.dueDate === today);
+                case 'week':
+                    return filteredTasks.filter(task => {
+                        const taskDate = new Date(task.dueDate);
+                        return taskDate >= todayDate && taskDate <= endOfWeek;
+                    });
+                case 'custom':
+                    if (state.dateRange.start && state.dateRange.end) {
+                        return filteredTasks.filter(task => {
+                            const taskDate = new Date(task.dueDate);
+                            return taskDate >= new Date(state.dateRange.start) && 
+                                   taskDate <= new Date(state.dateRange.end);
+                        });
+                    }
+                    return filteredTasks;
+                default: // 'all'
+                    return filteredTasks;
+            }
+        }
+
+        // Toggle task completion status
+        function toggleTaskComplete(taskId) {
+            const taskIndex = state.tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+                state.tasks[taskIndex].completed = !state.tasks[taskIndex].completed;
+                saveTasks();
+            }
+        }
+
+        // Edit task
+        function editTask(taskId) {
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task) {
+                state.editingTaskId = taskId;
+                modalTitle.textContent = 'Edit Task';
+                taskIdInput.value = task.id;
+                taskTitleInput.value = task.title;
+                taskDescriptionInput.value = task.description || '';
+                taskDueDateInput.value = task.dueDate;
+                taskPriorityInput.value = task.priority;
+                taskModal.classList.add('active');
+            }
+        }
+
+        // Delete task
+        function deleteTask(taskId) {
+            if (confirm('Are you sure you want to delete this task?')) {
+                state.tasks = state.tasks.filter(t => t.id !== taskId);
+                saveTasks();
+            }
+        }
+
+        // Open add task modal
+        function openAddTaskModal() {
+            state.editingTaskId = null;
+            modalTitle.textContent = 'Add New Task';
+            taskForm.reset();
+            taskDueDateInput.value = new Date().toISOString().split('T')[0];
+            taskModal.classList.add('active');
+        }
+
+        // Close task modal
+        function closeTaskModal() {
+            taskModal.classList.remove('active');
+        }
+
+        // Handle task form submission
+        function handleTaskSubmit(e) {
+            e.preventDefault();
+            
+            const taskData = {
+                id: taskIdInput.value || generateId(),
+                title: taskTitleInput.value.trim(),
+                description: taskDescriptionInput.value.trim(),
+                dueDate: taskDueDateInput.value,
+                priority: taskPriorityInput.value,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+
+            if (state.editingTaskId) {
+                // Update existing task
+                const index = state.tasks.findIndex(t => t.id === state.editingTaskId);
+                if (index !== -1) {
+                    state.tasks[index] = {
+                        ...state.tasks[index],
+                        ...taskData
+                    };
+                }
+                state.editingTaskId = null;
+            } else {
+                // Add new task
+                state.tasks.push(taskData);
+            }
+
+            saveTasks();
+            closeTaskModal();
+        }
+
+        // Handle filter change
+        function handleFilterChange(filter) {
+            state.currentFilter = filter;
+            if (filter === 'custom') {
+                dateRangeModal.classList.add('active');
+            } else {
+                renderTasks();
+            }
+            
+            // Update active filter button
+            filterButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+        }
+
+        // Close date range modal
+        function closeDateRangeModal() {
+            dateRangeModal.classList.remove('active');
+        }
+
+        // Apply date range filter
+        function applyDateRange() {
+            state.dateRange = {
+                start: startDateInput.value,
+                end: endDateInput.value
+            };
+            closeDateRangeModal();
+            renderTasks();
+        }
+
+        // Update task count display
+        function updateTaskCount() {
+            const completed = state.tasks.filter(t => t.completed).length;
+            const total = state.tasks.length;
+            completedCount.textContent = completed;
+            totalCount.textContent = total;
+        }
+
+        // Initialize charts
+        function initCharts() {
+            completionChart = new Chart(completionChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{
+                        label: 'Tasks',
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(0, 184, 148, 0.7)',
+                            'rgba(253, 203, 110, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(0, 184, 148, 1)',
+                            'rgba(253, 203, 110, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            priorityChart = new Chart(priorityChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(225, 112, 85, 0.7)',
+                            'rgba(253, 203, 110, 0.7)',
+                            'rgba(0, 184, 148, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(225, 112, 85, 1)',
+                            'rgba(253, 203, 110, 1)',
+                            'rgba(0, 184, 148, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update charts with current data
+        function updateCharts() {
+            const completed = state.tasks.filter(t => t.completed).length;
+            const pending = state.tasks.length - completed;
+            
+            const high = state.tasks.filter(t => t.priority === 'high').length;
+            const medium = state.tasks.filter(t => t.priority === 'medium').length;
+            const low = state.tasks.filter(t => t.priority === 'low').length;
+            
+            completionChart.data.datasets[0].data = [completed, pending];
+            priorityChart.data.datasets[0].data = [high, medium, low];
+            
+            completionChart.update();
+            priorityChart.update();
+        }
+
+        // Generate report
+        function generateReport() {
+            // CSV Report
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "ID,Title,Description,Due Date,Priority,Completed,Created At\n";
+            
+            state.tasks.forEach(task => {
+                csvContent += `${task.id},${task.title},${task.description || ''},${task.dueDate},${task.priority},${task.completed ? 'Yes' : 'No'},${task.createdAt}\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `task_report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Helper functions
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function showMessage(message, type) {
+            const colors = {
+                error: '#e17055',
+                success: '#00b894',
+                info: '#0984e3'
+            };
+            const toast = document.createElement('div');
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.backgroundColor = colors[type] || '#636e72';
+            toast.style.color = 'white';
+            toast.style.padding = '10px 20px';
+            toast.style.borderRadius = '5px';
+            toast.style.zIndex = '10000';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+
+            
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
